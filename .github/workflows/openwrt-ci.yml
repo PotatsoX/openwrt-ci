@@ -34,6 +34,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: master
+          path: ./openwrt-ci
 
       - name: Space cleanup
         env:
@@ -67,11 +68,16 @@ jobs:
           
       - name: Update feeds
         run: |
+          cd ./openwrt
+          sed -i 's/git.openwrt.org\/feed/github.com\/openwrt/g' ./feeds.conf.default
+          sed -i 's/git.openwrt.org\/project/github.com\/openwrt/g' ./feeds.conf.default
           ./scripts/feeds update -a
           ./scripts/feeds install -a
+          df -h
 
       - name: Generate configuration file
         run: |
+          cd ./openwrt
           rm -f ./.config*
           touch ./.config
 
@@ -116,12 +122,14 @@ jobs:
 
       - name: Make download
         run: |
+          cd ./openwrt
           make download -j8 || make download -j1 V=s
           rm -rf $(find ./dl/ -size -1024c)
           df -h
 
       - name: Compile firmware
         run: |
+          cd ./openwrt
           make -j$(nproc) || make -j1 V=s
           echo "======================="
           echo "Space usage:"
@@ -136,11 +144,11 @@ jobs:
           mkdir -p ./artifact/firmware
           mkdir -p ./artifact/package
           mkdir -p ./artifact/buildinfo
-          rm -rf $(find ./bin/targets/ -type d -name "packages")
-          cp -rf $(find ./bin/targets/ -type f) ./artifact/firmware/
-          cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
-          cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
-          cp -f ./.config ./artifact/buildinfo/
+          rm -rf $(find ./openwrt/bin/targets/ -type d -name "packages")
+          cp -rf $(find ./openwrt/bin/targets/ -type f) ./artifact/firmware/
+          cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/
+          cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+          cp -f ./openwrt/.config ./artifact/buildinfo/
 
       - name: Deliver buildinfo
         uses: actions/upload-artifact@v2
