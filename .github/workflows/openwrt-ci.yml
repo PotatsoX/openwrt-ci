@@ -98,7 +98,6 @@ jobs:
           CONFIG_PACKAGE_ppp-mod-pppoe=n
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
           CONFIG_PACKAGE_MAC80211_MESH=n
-          CONFIG_DEFAULT_dnsmasq=n
           CONFIG_DEFAULT_firewall4=n
           CONFIG_PACKAGE_kmod-usb-core=n
           CONFIG_PACKAGE_kmod-usb-ehci=n
