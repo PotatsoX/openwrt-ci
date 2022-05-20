@@ -243,7 +243,7 @@ index 81b68f63540..26f58474263 100644
 +endef
 +TARGET_DEVICES += wwdk_hptem7688
 diff --git a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
-index 408f5f5e01d..ce2f83cf045 100644
+index 408f5f5e01d..ce2f83cf045 100755
 --- a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
 +++ b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
 @@ -168,6 +168,12 @@ ramips_setup_interfaces()
