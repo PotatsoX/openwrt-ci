@@ -7,11 +7,11 @@ Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 ---
- .../files/etc/uci-defaults/50_network         |  37 ++++
+ .../files/etc/uci-defaults/50_network         |  38 ++++
  .../ramips/dts/mt7628an_wwdk_hptem7688.dts    | 161 ++++++++++++++++++
  target/linux/ramips/image/mt76x8.mk           |   9 +
  .../mt76x8/base-files/etc/board.d/02_network  |   6 +
- 4 files changed, 213 insertions(+), 0 deletions(-)
+ 4 files changed, 214 insertions(+), 0 deletions(-)
  create mode 100644 package/base-files/files/etc/uci-defaults/50_network
  create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_hptem7688.dts
 
@@ -20,7 +20,7 @@ new file mode 100644
 index 00000000000..c71cc1be4f0
 --- /dev/null
 +++ b/package/base-files/files/etc/uci-defaults/50_network
-@@ -0,0 +1,37 @@
+@@ -0,0 +1,38 @@
 +#!/bin/sh
 +uci set system.@system[0].hostname='HPTEM'
 +uci set system.@system[0].timezone='CST-8'
@@ -58,6 +58,7 @@ index 00000000000..c71cc1be4f0
 +echo net.ipv6.conf.default.disable_ipv6=1 >> /etc/sysctl.conf
 +echo net.ipv6.conf.lo.disable_ipv6 = 1 >> /etc/sysctl.conf
 +echo 1 > /proc/sys/net/ipv6/conf/all/disable_ipv6
++exit 0
 diff --git a/target/linux/ramips/dts/mt7628an_wwdk_hptem7688.dts b/target/linux/ramips/dts/mt7628an_wwdk_hptem7688.dts
 new file mode 100644
 index 00000000000..325f0c9d278
