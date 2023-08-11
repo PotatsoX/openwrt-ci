@@ -20,7 +20,7 @@ new file mode 100644
 index 00000000000..c71cc1be4f0
 --- /dev/null
 +++ b/package/base-files/files/etc/uci-defaults/50_network
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,41 @@
 +#!/bin/sh
 +uci set system.@system[0].hostname='HPTEM'
 +uci set system.@system[0].timezone='CST-8'
@@ -33,6 +33,9 @@ index 00000000000..c71cc1be4f0
 +uci set network.lan.netmask='255.255.255.0'
 +uci commit
 +
++# 生成随机的 MAC 地址
++random_mac=$(printf 'DC:D8:7C:0C:%02X:%02X' $((RANDOM%256)) $((RANDOM%256)))
++uci set wireless.@wifi-device[0].macaddr="$random_mac"
 +uci set wireless.@wifi-device[0].disabled=0
 +uci set wireless.@wifi-iface[0].disabled=0
 +uci set wireless.@wifi-device[0].channel=3
