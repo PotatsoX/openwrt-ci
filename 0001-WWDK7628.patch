@@ -1,0 +1,210 @@
+From 67c458e8b2aca45a78fa35d69b7fb64362f6673b Mon Sep 17 00:00:00 2001
+From: PotatsoX <ichococcino@gmail.com>
+Date: Fri, 16 Aug 2024 11:55:08 +0800
+Subject: [PATCH] 7628nn
+
+---
+ .../files/etc/uci-defaults/99_custom          |  46 ++++++++
+ .../linux/ramips/dts/mt7628an_wwdk_m7628.dts | 103 ++++++++++++++++++
+ target/linux/ramips/image/mt76x8.mk           |   8 ++
+ .../mt76x8/base-files/etc/board.d/02_network  |   1 +
+ 4 files changed, 158 insertions(+)
+ create mode 100644 package/base-files/files/etc/uci-defaults/99_custom
+ create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
+
+diff --git a/package/base-files/files/etc/uci-defaults/99_custom b/package/base-files/files/etc/uci-defaults/99_custom
+new file mode 100644
+index 0000000..9421afd
+--- /dev/null
++++ b/package/base-files/files/etc/uci-defaults/99_custom
+@@ -0,0 +1,46 @@
++uci batch <<EOF
++set system.@system[0].hostname='WWDK'
++set system.@system[0].timezone='CST-8'
++set system.@system[0].zonename='Asia/Shanghai'
++EOF
++uci commit network
++
++uci batch <<EOF
++set wireless.@wifi-device[0].disabled=0
++set wireless.@wifi-iface[0].disabled=0
++set wireless.@wifi-device[0].channel=3    //设置无线信道为3  
++set wireless.@wifi-iface[0].ssid='WWDK-TEST'
++set wireless.@wifi-iface[0].key='12345678'
++set wireless.@wifi-iface[0].encryption='none'
++set wireless.sta.disabled=1
++EOF
++uci commit
++
++uci batch <<EOF
++set network.wan=interface
++set network.wan.ifname='eth0.1'
++set network.wan.proto='dhcp'
++
++set network.lan=interface
++set network.lan.ipaddr='192.168.0.1'
++set network.lan.netmask='255.255.255.0'
++
++set network.lan.ipv6=off
++set network.wan.ipv6=off
++set dhcp.lan.dhcpv6=disabled
++set dhcp.lan.dhcpv6='disabled'
++set dhcp.wan.dhcpv6='disabled'
++set network.lan.ipv6='0'
++set network.wan.ipv6='0'
++set network.lan.delegate='0'
++set network.wan.delegate='0'
++delete dhcp.lan.dhcpv6
++delete dhcp.lan.ra
++delete dhcp.wan.dhcpv6
++delete dhcp.wan.ra
++delete network.globals.ula_prefix
++delete network.wan6
++EOF
++uci commit
++
++exit 0
+diff --git a/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
+new file mode 100644
+index 0000000..0e70d65
+--- /dev/null
++++ b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
+@@ -0,0 +1,103 @@
++// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
++
++#include "mt7628an.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++
++/ {
++	compatible = "wwdk,m7628", "mediatek,mt7628an-soc";
++	model = "Geophyson Wireless 7628";
++
++	aliases {
++		led-boot = &led_wifi;
++		led-failsafe = &led_wifi;
++		led-running = &led_wifi;
++		led-upgrade = &led_wifi;
++	};
++	
++	chosen {
++		bootargs = "console=ttyS0,57600";
++	};
++	
++	keys {
++		compatible = "gpio-keys";
++
++		reset {
++			label = "reset";
++			gpios = <&gpio 38 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_RESTART>;
++		};
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_wifi: wifi {
++			label = "blue:wifi";
++			gpios = <&gpio 37 GPIO_ACTIVE_LOW>;
++		};
++	};
++};
++
++&state_default {
++	gpio {
++		groups = "i2c";
++		function = "gpio";
++	};
++};
++
++&uart1 {
++	status = "okay";
++};
++
++&spi0 {
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <10000000>;
++		broken-flash-reset;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "u-boot";
++				reg = <0x0 0x30000>;
++				read-only;
++			};
++
++			partition@30000 {
++				label = "u-boot-env";
++				reg = <0x30000 0x10000>;
++				read-only;
++			};
++
++			factory: partition@40000 {
++				label = "factory";
++				reg = <0x40000 0x10000>;
++				read-only;
++			};
++
++			partition@50000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x50000 0x0fb0000>;
++			};
++		};
++	};
++};
++
++&ethernet {
++	mtd-mac-address = <&factory 0x28>;
++};
++
++&wmac {
++	status = "okay";
++
++	mediatek,mtd-eeprom = <&factory 0x0>;
++};
+\ No newline at end of file
+diff --git a/target/linux/ramips/image/mt76x8.mk b/target/linux/ramips/image/mt76x8.mk
+index 5b9a04d..fa82474 100644
+--- a/target/linux/ramips/image/mt76x8.mk
++++ b/target/linux/ramips/image/mt76x8.mk
+@@ -257,6 +257,14 @@ define Device/hilink_hlk-7688a
+ endef
+ TARGET_DEVICES += hilink_hlk-7688a
+ 
++define Device/wwdk_m7628
++  IMAGE_SIZE := 16064k
++  DEVICE_VENDOR := WWDK
++  DEVICE_MODEL := M7628
++  DEVICE_PACKAGES := uboot-envtools
++endef
++TARGET_DEVICES += wwdk_m7628
++
+ define Device/hiwifi_hc5611
+   IMAGE_SIZE := 15808k
+   DEVICE_VENDOR := HiWiFi
+diff --git a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
+index e77bc82..9b3d92f 100644
+--- a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
++++ b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
+@@ -39,6 +39,7 @@ ramips_setup_interfaces()
+ 	asus,rt-ac1200-v2|\
+ 	hilink,hlk-7628n|\
+ 	hilink,hlk-7688a|\
++	wwdk,m7628|\
+ 	hiwifi,hc5861b|\
+ 	kroks,kndrt31r16|\
+ 	skylab,skw92a|\
+-- 
+2.39.1.windows.1
+
