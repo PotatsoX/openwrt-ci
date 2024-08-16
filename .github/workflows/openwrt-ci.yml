@@ -97,6 +97,8 @@ jobs:
           CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=n
           CONFIG_KERNEL_IPV6_SUBTREES=n
           CONFIG_KERNEL_IPV6_MROUTE=n
+          CONFIG_DEFAULT_ppp=n
+          CONFIG_DEFAULT_ppp-mod-pppoe=n
           CONFIG_PACKAGE_ppp=n
           CONFIG_PACKAGE_ppp-mod-pppoe=n
           CONFIG_PACKAGE_odhcp6c=n
@@ -109,7 +111,10 @@ jobs:
           CONFIG_PACKAGE_luci-proto-ppp=n
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
           CONFIG_PACKAGE_MAC80211_MESH=n
+          CONFIG_DEFAULT_nftables=n
+          CONFIG_DEFAULT_dnsmasq=n
           CONFIG_DEFAULT_firewall=n
+          CONFIG_DEFAULT_firewall4=n
           CONFIG_PACKAGE_kmod-usb-core=n
           CONFIG_PACKAGE_kmod-usb-ehci=n
           CONFIG_PACKAGE_kmod-usb-ohci=n
