@@ -1,14 +1,15 @@
-From 67c458e8b2aca45a78fa35d69b7fb64362f6673b Mon Sep 17 00:00:00 2001
+From ed92a4df6506dfeffc246be0e46411281d230261 Mon Sep 17 00:00:00 2001
 From: PotatsoX <ichococcino@gmail.com>
 Date: Fri, 16 Aug 2024 11:55:08 +0800
 Subject: [PATCH] 7628nn
 
+WLED_N
 ---
- .../files/etc/uci-defaults/99_custom          |  46 ++++++++
- .../linux/ramips/dts/mt7628an_wwdk_m7628.dts | 103 ++++++++++++++++++
- target/linux/ramips/image/mt76x8.mk           |   8 ++
- .../mt76x8/base-files/etc/board.d/02_network  |   1 +
- 4 files changed, 158 insertions(+)
+ .../files/etc/uci-defaults/99_custom          | 46 +++++++++
+ .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 96 +++++++++++++++++++
+ target/linux/ramips/image/mt76x8.mk           |  8 ++
+ .../mt76x8/base-files/etc/board.d/02_network  |  1 +
+ 4 files changed, 151 insertions(+)
  create mode 100644 package/base-files/files/etc/uci-defaults/99_custom
  create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 
@@ -66,10 +67,10 @@ index 0000000..9421afd
 +exit 0
 diff --git a/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 new file mode 100644
-index 0000000..0e70d65
+index 0000000..e0e0fb2
 --- /dev/null
 +++ b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
-@@ -0,0 +1,103 @@
+@@ -0,0 +1,96 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +
 +#include "mt7628an.dtsi"
@@ -81,13 +82,6 @@ index 0000000..0e70d65
 +	compatible = "wwdk,m7628", "mediatek,mt7628an-soc";
 +	model = "Geophyson Wireless 7628";
 +
-+	aliases {
-+		led-boot = &led_wifi;
-+		led-failsafe = &led_wifi;
-+		led-running = &led_wifi;
-+		led-upgrade = &led_wifi;
-+	};
-+	
 +	chosen {
 +		bootargs = "console=ttyS0,57600";
 +	};
@@ -105,9 +99,9 @@ index 0000000..0e70d65
 +	leds {
 +		compatible = "gpio-leds";
 +
-+		led_wifi: wifi {
-+			label = "blue:wifi";
-+			gpios = <&gpio 37 GPIO_ACTIVE_LOW>;
++		wlan {
++			label = "green:wlan";
++			gpios = <&gpio 44 GPIO_ACTIVE_LOW>;
 +		};
 +	};
 +};
