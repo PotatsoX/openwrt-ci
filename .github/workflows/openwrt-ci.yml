@@ -97,12 +97,9 @@ jobs:
           CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=n
           CONFIG_KERNEL_IPV6_SUBTREES=n
           CONFIG_KERNEL_IPV6_MROUTE=n
-          CONFIG_DEFAULT_ppp=n
-          CONFIG_DEFAULT_ppp-mod-pppoe=n
           CONFIG_PACKAGE_ppp=n
           CONFIG_PACKAGE_ppp-mod-pppoe=n
           CONFIG_PACKAGE_odhcp6c=n
-          CONFIG_PACKAGE_odhcpd=n
           CONFIG_PACKAGE_odhcpd-ipv6only=n
           CONFIG_PACKAGE_kmod-ppp=n
           CONFIG_PACKAGE_kmod-pppoe=n
@@ -111,15 +108,7 @@ jobs:
           CONFIG_PACKAGE_luci-proto-ppp=n
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
           CONFIG_PACKAGE_MAC80211_MESH=n
-          CONFIG_DEFAULT_nftables=n
-          CONFIG_DEFAULT_dnsmasq=n
-          CONFIG_DEFAULT_firewall=n
-          CONFIG_DEFAULT_firewall4=n
-          CONFIG_PACKAGE_kmod-usb-core=n
-          CONFIG_PACKAGE_kmod-usb-ehci=n
-          CONFIG_PACKAGE_kmod-usb-ohci=n
-          CONFIG_PACKAGE_kmod-usb2=n
-          CONFIG_PACKAGE_kmod-usb3=n
+          CONFIG_USB_SUPPORT=n
           CONFIG_KERNEL_DEBUG_FS=n
           CONFIG_TARGET_IMAGES_GZIP=y
           CONFIG_KERNEL_BUILD_USER="OpenWrt-CI"
@@ -164,19 +153,19 @@ jobs:
           cp -f ./openwrt/.config ./artifact/buildinfo/
 
       - name: Deliver buildinfo
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
 
       - name: Deliver package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_package
           path: ./artifact/package/
 
       - name: Deliver firmware
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_firmware
           path: ./openwrt/bin/targets/
