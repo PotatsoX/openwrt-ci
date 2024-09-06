@@ -62,8 +62,8 @@ jobs:
       - name: Download Source
         uses: actions/checkout@v4
         with:
-          repository: openwrt/openwrt
-          ref: v23.05.4
+          repository: destan19/openwrt-fros
+          ref: openwrt-23.05-fros
           path: ./openwrt
           
       - name: Update feeds
@@ -81,38 +81,21 @@ jobs:
           rm -f ./.config*
           touch ./.config
 
-          git apply ../openwrt-ci/0001-WWDK7628.patch
+          git apply ../openwrt-ci/FROS-Luban.patch
           #
           # 在 cat >> .config <<EOF 到 EOF 之间粘贴你的编译配置, 需注意缩进关系
           # 例如:
 
           cat >> .config <<EOF
           CONFIG_TARGET_ramips=y
-          CONFIG_TARGET_ramips_mt76x8=y
-          CONFIG_TARGET_ramips_mt76x8_DEVICE_wwdk_m7628=y
-          CONFIG_PACKAGE_luci=y
+          CONFIG_TARGET_ramips_mt7621=y
+          CONFIG_TARGET_ramips_mt7621_DEVICE_jdcloud_re-cp-02=y
           CONFIG_LUCI_LANG_zh_Hans=y
-          CONFIG_IPV6=n
-          CONFIG_KERNEL_IPV6=n
-          CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=n
-          CONFIG_KERNEL_IPV6_SUBTREES=n
-          CONFIG_KERNEL_IPV6_MROUTE=n
-          CONFIG_PACKAGE_ppp=n
-          CONFIG_PACKAGE_ppp-mod-pppoe=n
-          CONFIG_PACKAGE_odhcp6c=n
-          CONFIG_PACKAGE_odhcpd-ipv6only=n
-          CONFIG_PACKAGE_kmod-ppp=n
-          CONFIG_PACKAGE_kmod-pppoe=n
-          CONFIG_PACKAGE_kmod-pppox=n
-          CONFIG_PACKAGE_kmod-mppe=n
-          CONFIG_PACKAGE_luci-proto-ppp=n
-          CONFIG_PACKAGE_MAC80211_DEBUGFS=n
-          CONFIG_PACKAGE_MAC80211_MESH=n
-          CONFIG_USB_SUPPORT=n
-          CONFIG_KERNEL_DEBUG_FS=n
-          CONFIG_TARGET_IMAGES_GZIP=y
           CONFIG_KERNEL_BUILD_USER="OpenWrt-CI"
           CONFIG_KERNEL_BUILD_DOMAIN="Geophyson"
+          CONFIG_PACKAGE_fros=y
+          CONFIG_PACKAGE_fros_files=y
+          CONFIG_PACKAGE_luci-app-fros=y
           EOF
 
           #

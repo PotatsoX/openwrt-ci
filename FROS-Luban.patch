@@ -1,0 +1,241 @@
+From ce30336bd3286f06ca319774efe2b4a0af7b7a92 Mon Sep 17 00:00:00 2001
+From: PotatsoX <ichococcino@gmail.com>
+Date: Fri, 6 Sep 2024 09:18:33 +0800
+Subject: [PATCH] ramips: add support for JDCloud RE-CP-02
+
+---
+ .../ramips/dts/mt7621_jdcloud_re-cp-02.dts    | 186 ++++++++++++++++++
+ target/linux/ramips/image/mt7621.mk           |   9 +
+ .../mt7621/base-files/etc/init.d/bootcount    |   3 +
+ 3 files changed, 198 insertions(+)
+ create mode 100644 target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
+
+diff --git a/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts b/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
+new file mode 100644
+index 0000000..8512ff9
+--- /dev/null
++++ b/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
+@@ -0,0 +1,186 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++
++#include "mt7621.dtsi"
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/leds/common.h>
++
++/ {
++	compatible = "jdcloud,re-cp-02", "mediatek,mt7621-soc";
++	model = "JDCloud RE-CP-02";
++
++	aliases {
++		label-mac-device = &gmac0;
++		led-boot = &led_status_blue;
++		led-failsafe = &led_status_red;
++		led-running = &led_status_green;
++		led-upgrade = &led_status_blue;
++	};
++
++	chosen {
++		bootargs = "console=ttyS0,115200n8";
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		led_status_red: led-0 {
++			color = <LED_COLOR_ID_RED>;
++			function = LED_FUNCTION_STATUS;
++			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
++		};
++
++		led_status_blue: led-1 {
++			color = <LED_COLOR_ID_BLUE>;
++			function = LED_FUNCTION_STATUS;
++			gpios = <&gpio 7 GPIO_ACTIVE_LOW>;
++		};
++
++		led_status_green: led-2 {
++			color = <LED_COLOR_ID_GREEN>;
++			function = LED_FUNCTION_STATUS;
++			gpios = <&gpio 8 GPIO_ACTIVE_LOW>;
++		};
++	};
++
++	keys {
++		compatible = "gpio-keys";
++
++		wps {
++			label = "wps";
++			gpios = <&gpio 15 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_WPS_BUTTON>;
++		};
++
++		reset {
++			label = "reset";
++			gpios = <&gpio 18 GPIO_ACTIVE_LOW>;
++			linux,code = <KEY_RESTART>;
++		};
++	};
++};
++
++&spi0 {
++	status = "okay";
++
++	flash@0 {
++		compatible = "jedec,spi-nor";
++		reg = <0>;
++		spi-max-frequency = <10000000>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "U-Boot";
++				reg = <0x0 0x40000>;
++				read-only;
++			};
++
++			partition@40000 {
++				compatible = "u-boot,env";
++				label = "Config";
++				reg = <0x40000 0x10000>;
++			};
++
++			partition@50000 {
++				label = "Factory";
++				reg = <0x50000 0x40000>;
++				read-only;
++
++				nvmem-layout {
++					compatible = "fixed-layout";
++					#address-cells = <1>;
++					#size-cells = <1>;
++
++					eeprom_factory_0: eeprom@0 {
++						reg = <0x0 0xe00>;
++					};
++
++					macaddr_factory_3fff4: macaddr@3fff4 {
++						reg = <0x3fff4 0x6>;
++					};
++
++					macaddr_factory_3fffa: macaddr@3fffa {
++						reg = <0x3fffa 0x6>;
++					};
++				};
++			};
++
++			partition@90000 {
++				compatible = "denx,uimage";
++				label = "firmware";
++				reg = <0x90000 0xf70000>;
++			};
++		};
++	};
++};
++
++&state_default {
++	gpio {
++		groups = "uart3", "jtag", "wdt";
++		function = "gpio";
++	};
++};
++
++&sdhci {
++	status = "okay";
++};
++
++&pcie {
++	status = "okay";
++};
++
++&pcie1 {
++	wifi@0,0 {
++		compatible = "mediatek,mt76";
++		reg = <0x0000 0 0 0 0>;
++		nvmem-cells = <&eeprom_factory_0>;
++		nvmem-cell-names = "eeprom";
++		mediatek,disable-radar-background;
++	};
++};
++
++&gmac0 {
++	nvmem-cells = <&macaddr_factory_3fff4>;
++	nvmem-cell-names = "mac-address";
++};
++
++&gmac1 {
++	status = "okay";
++	label = "wan";
++	phy-handle = <&ethphy4>;
++
++	nvmem-cells = <&macaddr_factory_3fffa>;
++	nvmem-cell-names = "mac-address";
++};
++
++&ethphy4 {
++	/delete-property/ interrupts;
++};
++
++&switch0 {
++	ports {
++		port@1 {
++			status = "okay";
++			label = "lan1";
++		};
++
++		port@2 {
++			status = "okay";
++			label = "lan2";
++		};
++
++		port@3 {
++			status = "okay";
++			label = "lan3";
++		};
++	};
++};
++
++&xhci {
++	status = "disabled";
++};
+diff --git a/target/linux/ramips/image/mt7621.mk b/target/linux/ramips/image/mt7621.mk
+index 1a8df61..b93dba9 100644
+--- a/target/linux/ramips/image/mt7621.mk
++++ b/target/linux/ramips/image/mt7621.mk
+@@ -1448,6 +1448,15 @@ define Device/jcg_y2
+ endef
+ TARGET_DEVICES += jcg_y2
+ 
++define Device/jdcloud_re-cp-02
++  $(Device/dsa-migration)
++  IMAGE_SIZE := 16000k
++  DEVICE_VENDOR := JD-Cloud
++  DEVICE_MODEL := RE-CP-02
++  DEVICE_PACKAGES := kmod-mt7915-firmware kmod-mmc-mtk
++endef
++TARGET_DEVICES += jdcloud_re-cp-02
++
+ define Device/keenetic_kn-3010
+   $(Device/dsa-migration)
+   $(Device/uimage-lzma-loader)
+diff --git a/target/linux/ramips/mt7621/base-files/etc/init.d/bootcount b/target/linux/ramips/mt7621/base-files/etc/init.d/bootcount
+index 9db700b..16b8993 100644
+--- a/target/linux/ramips/mt7621/base-files/etc/init.d/bootcount
++++ b/target/linux/ramips/mt7621/base-files/etc/init.d/bootcount
+@@ -15,6 +15,9 @@ boot() {
+ 			$((0xff)) ]] || printf '\xff' | dd of=/dev/mtdblock3 \
+ 			count=1 bs=1 seek=$((0x20001))
+ 		;;
++	jdcloud,re-cp-02)
++		echo -e "bootcount 0\nbootlimit 5\nupgrade_available 1"  | /usr/sbin/fw_setenv -s -
++		;;
+ 	linksys,e5600|\
+ 	linksys,ea6350-v4|\
+ 	linksys,ea7300-v1|\
+-- 
+2.39.1.windows.1
+
