@@ -10,9 +10,6 @@
 name: FROS-Luban
 
 on:
-  push:
-    branches: 
-      - master
   watch:
     types: started
   release:

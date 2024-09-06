@@ -1,21 +1,24 @@
-From ce30336bd3286f06ca319774efe2b4a0af7b7a92 Mon Sep 17 00:00:00 2001
+From bb7f016a9a1c74a0a42e13ac1c52c00348a6acd8 Mon Sep 17 00:00:00 2001
 From: PotatsoX <ichococcino@gmail.com>
-Date: Fri, 6 Sep 2024 09:18:33 +0800
-Subject: [PATCH] ramips: add support for JDCloud RE-CP-02
+Date: Fri, 6 Sep 2024 11:05:01 +0800
+Subject: [PATCH] =?UTF-8?q?=E5=A2=9E=E5=8A=A0=E6=94=AF=E6=8C=81?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 ---
- .../ramips/dts/mt7621_jdcloud_re-cp-02.dts    | 186 ++++++++++++++++++
+ .../ramips/dts/mt7621_jdcloud_re-cp-02.dts    | 188 ++++++++++++++++++
  target/linux/ramips/image/mt7621.mk           |   9 +
  .../mt7621/base-files/etc/init.d/bootcount    |   3 +
- 3 files changed, 198 insertions(+)
+ 3 files changed, 200 insertions(+)
  create mode 100644 target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
 
 diff --git a/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts b/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
 new file mode 100644
-index 0000000..8512ff9
+index 0000000..e4e77e9
 --- /dev/null
 +++ b/target/linux/ramips/dts/mt7621_jdcloud_re-cp-02.dts
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,188 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +
 +#include "mt7621.dtsi"
@@ -176,8 +179,10 @@ index 0000000..8512ff9
 +	nvmem-cell-names = "mac-address";
 +};
 +
-+&ethphy4 {
-+	/delete-property/ interrupts;
++&mdio {
++	ethphy4: ethernet-phy@4 {
++		reg = <4>;
++	};
 +};
 +
 +&switch0 {

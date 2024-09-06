@@ -7,12 +7,9 @@
 # <https://github.com/KFERMercer/OpenWrt-CI>
 #
 
-name: OpenWrt-CI
+name: OpenWrt-7628
 
 on:
-  push:
-    branches: 
-      - master
   watch:
     types: started
   release:
