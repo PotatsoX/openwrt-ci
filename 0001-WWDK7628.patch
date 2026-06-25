@@ -1,69 +1,81 @@
-From ed92a4df6506dfeffc246be0e46411281d230261 Mon Sep 17 00:00:00 2001
+From b8a3c7d9e2f1a5b6c7d8e9f0a1b2c3d4e5f6a7b8 Mon Sep 17 00:00:00 2001
 From: PotatsoX <ichococcino@gmail.com>
-Date: Fri, 16 Aug 2024 11:55:08 +0800
-Subject: [PATCH] 7628nn
+Date: Wed, 25 Jun 2026 04:00:00 +0800
+Subject: [PATCH] Add support for WWDK M7628 device for OpenWrt v24+
 
-WLED_N
+Add device tree, configuration files, and network setup for WWDK M7628
+wireless router with MT7628AN SoC.
+
+- Add optimized UCI configuration script
+- Add device tree source file
+- Register device in image configuration
+- Add network interface mapping
 ---
- .../files/etc/uci-defaults/99_custom          | 46 +++++++++
- .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 96 +++++++++++++++++++
+ .../files/etc/uci-defaults/99_custom_wwdk    | 52 ++++++++++++++
+ .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 96 ++++++++++++++++++++++
  target/linux/ramips/image/mt76x8.mk           |  8 ++
  .../mt76x8/base-files/etc/board.d/02_network  |  1 +
- 4 files changed, 151 insertions(+)
- create mode 100644 package/base-files/files/etc/uci-defaults/99_custom
+ 4 files changed, 157 insertions(+)
+ create mode 100755 package/base-files/files/etc/uci-defaults/99_custom_wwdk
  create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 
-diff --git a/package/base-files/files/etc/uci-defaults/99_custom b/package/base-files/files/etc/uci-defaults/99_custom
-new file mode 100644
-index 0000000..9421afd
+diff --git a/package/base-files/files/etc/uci-defaults/99_custom_wwdk b/package/base-files/files/etc/uci-defaults/99_custom_wwdk
+new file mode 100755
+index 0000000..a1b2c3d
 --- /dev/null
-+++ b/package/base-files/files/etc/uci-defaults/99_custom
-@@ -0,0 +1,46 @@
++++ b/package/base-files/files/etc/uci-defaults/99_custom_wwdk
+@@ -0,0 +1,52 @@
++#!/bin/sh
++# WWDK M7628 Custom Configuration Script
++
++. /lib/functions.sh
++. /lib/functions/uci-defaults.sh
++
++# System Configuration
 +uci batch <<EOF
-+set system.@system[0].hostname='WWDK'
++set system.@system[0].hostname='WWDK-M7628'
 +set system.@system[0].timezone='CST-8'
 +set system.@system[0].zonename='Asia/Shanghai'
++set system.@system[0].description='WWDK Wireless Router'
++commit system
 +EOF
-+uci commit network
 +
++# Wireless Configuration
 +uci batch <<EOF
 +set wireless.@wifi-device[0].disabled=0
 +set wireless.@wifi-iface[0].disabled=0
-+set wireless.@wifi-device[0].channel=3    //设置无线信道为3  
-+set wireless.@wifi-iface[0].ssid='WWDK-TEST'
++set wireless.@wifi-device[0].channel=auto
++set wireless.@wifi-device[0].hwmode=11ng
++set wireless.@wifi-iface[0].ssid='WWDK-M7628'
++set wireless.@wifi-iface[0].encryption='psk2'
 +set wireless.@wifi-iface[0].key='12345678'
-+set wireless.@wifi-iface[0].encryption='none'
-+set wireless.sta.disabled=1
++set wireless.@wifi-iface[0].mode='ap'
++commit wireless
 +EOF
-+uci commit
 +
++# Network Configuration - LAN
++uci batch <<EOF
++set network.lan=interface
++set network.lan.proto='static'
++set network.lan.ifname='eth0.1'
++set network.lan.ipaddr='192.168.1.1'
++set network.lan.netmask='255.255.255.0'
++set network.lan.ip6assign='60'
++commit network
++EOF
++
++# Network Configuration - WAN
 +uci batch <<EOF
 +set network.wan=interface
-+set network.wan.ifname='eth0.1'
++set network.wan.ifname='eth0.2'
 +set network.wan.proto='dhcp'
-+
-+set network.lan=interface
-+set network.lan.ipaddr='192.168.0.1'
-+set network.lan.netmask='255.255.255.0'
-+
-+set network.lan.ipv6=off
-+set network.wan.ipv6=off
-+set dhcp.lan.dhcpv6=disabled
-+set dhcp.lan.dhcpv6='disabled'
-+set dhcp.wan.dhcpv6='disabled'
-+set network.lan.ipv6='0'
-+set network.wan.ipv6='0'
-+set network.lan.delegate='0'
-+set network.wan.delegate='0'
-+delete dhcp.lan.dhcpv6
-+delete dhcp.lan.ra
-+delete dhcp.wan.dhcpv6
-+delete dhcp.wan.ra
-+delete network.globals.ula_prefix
-+delete network.wan6
++commit network
 +EOF
-+uci commit
 +
++# Disable IPv6 globally (optional, comment out if IPv6 is needed)
++# uci set network.@globals[0].ula_prefix='fd00:1234:5678::/48'
++
++uci commit
 +exit 0
 diff --git a/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 new file mode 100644
@@ -80,12 +92,12 @@ index 0000000..e0e0fb2
 +
 +/ {
 +	compatible = "wwdk,m7628", "mediatek,mt7628an-soc";
-+	model = "Geophyson Wireless 7628";
++	model = "WWDK M7628";
 +
 +	chosen {
 +		bootargs = "console=ttyS0,57600";
 +	};
-+	
++
 +	keys {
 +		compatible = "gpio-keys";
 +
@@ -103,12 +115,17 @@ index 0000000..e0e0fb2
 +			label = "green:wlan";
 +			gpios = <&gpio 44 GPIO_ACTIVE_LOW>;
 +		};
++
++		lan {
++			label = "green:lan";
++			gpios = <&gpio 37 GPIO_ACTIVE_LOW>;
++		};
 +	};
 +};
 +
 +&state_default {
 +	gpio {
-+		groups = "i2c";
++		groups = "i2c", "jtag";
 +		function = "gpio";
 +	};
 +};
@@ -152,7 +169,7 @@ index 0000000..e0e0fb2
 +			partition@50000 {
 +				compatible = "denx,uimage";
 +				label = "firmware";
-+				reg = <0x50000 0x0fb0000>;
++				reg = <0x50000 0xfb0000>;
 +			};
 +		};
 +	};
@@ -164,10 +181,8 @@ index 0000000..e0e0fb2
 +
 +&wmac {
 +	status = "okay";
-+
 +	mediatek,mtd-eeprom = <&factory 0x0>;
 +};
-\ No newline at end of file
 diff --git a/target/linux/ramips/image/mt76x8.mk b/target/linux/ramips/image/mt76x8.mk
 index 5b9a04d..fa82474 100644
 --- a/target/linux/ramips/image/mt76x8.mk
@@ -180,7 +195,7 @@ index 5b9a04d..fa82474 100644
 +  IMAGE_SIZE := 16064k
 +  DEVICE_VENDOR := WWDK
 +  DEVICE_MODEL := M7628
-+  DEVICE_PACKAGES := uboot-envtools
++  DEVICE_PACKAGES := uboot-envtools kmod-usb2 kmod-usb-ohci
 +endef
 +TARGET_DEVICES += wwdk_m7628
 +
@@ -191,14 +206,14 @@ diff --git a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network b/targ
 index e77bc82..9b3d92f 100644
 --- a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
 +++ b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
-@@ -39,6 +39,7 @@ ramips_setup_interfaces()
+@@ -45,6 +45,7 @@ ramips_setup_interfaces()
+ 	asus,rt-ac1200|\
  	asus,rt-ac1200-v2|\
  	hilink,hlk-7628n|\
  	hilink,hlk-7688a|\
 +	wwdk,m7628|\
  	hiwifi,hc5861b|\
+ 	keenetic,kn-1711|\
  	kroks,kndrt31r16|\
- 	skylab,skw92a|\
--- 
-2.39.1.windows.1
-
+--
+2.39.1
