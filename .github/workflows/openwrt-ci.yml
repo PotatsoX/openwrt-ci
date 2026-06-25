@@ -90,21 +90,21 @@ jobs:
           CONFIG_TARGET_ramips=y
           CONFIG_TARGET_ramips_mt76x8=y
           CONFIG_TARGET_ramips_mt76x8_DEVICE_wwdk_m7628=y
-          
+
           # LuCI Web Interface (Chinese)
           CONFIG_PACKAGE_luci=y
           CONFIG_PACKAGE_luci-base=y
           CONFIG_LUCI_LANG_zh_Hans=y
-          
+
           # Disable IPv6 (not needed for embedded control)
           CONFIG_IPV6=n
           CONFIG_KERNEL_IPV6=n
-          
+
           # Disable firewall (embedded device, no internet)
           CONFIG_PACKAGE_firewall4=n
           CONFIG_PACKAGE_firewall=n
           CONFIG_PACKAGE_ufw=n
-          
+
           # Disable PPP/WAN (not needed for embedded control)
           CONFIG_PACKAGE_ppp=n
           CONFIG_PACKAGE_ppp-mod-pppoe=n
@@ -115,7 +115,7 @@ jobs:
           CONFIG_PACKAGE_kmod-pppox=n
           CONFIG_PACKAGE_luci-proto-ppp=n
           CONFIG_PACKAGE_kmod-mppe=n
-          
+
           # Disable unnecessary packages for speed
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
           CONFIG_PACKAGE_MAC80211_MESH=n
@@ -124,13 +124,54 @@ jobs:
           CONFIG_KERNEL_DEBUG_FS=n
           CONFIG_KERNEL_KALLSYMS=n
           CONFIG_KERNEL_DEBUG_INFO=n
-          
+
           # Optimize for boot speed - remove unnecessary daemons
           CONFIG_PACKAGE_rpcd=n
           CONFIG_PACKAGE_uhttpd=n
           CONFIG_PACKAGE_odhcpd=n
           CONFIG_PACKAGE_dnsmasq=n
-          
+
+          # ===== 积极方案 - 额外移除（保留 ethtool 与 netperf） =====
+          # 文件系统工具
+          CONFIG_PACKAGE_e2fsprogs=n
+          CONFIG_PACKAGE_resize2fs=n
+          CONFIG_PACKAGE_fdisk=n
+          CONFIG_PACKAGE_parted=n
+
+          # 系统调试工具
+          CONFIG_PACKAGE_gdb=n
+          CONFIG_PACKAGE_strace=n
+
+          # 命令行工具
+          CONFIG_PACKAGE_curl=n
+          CONFIG_PACKAGE_less=n
+          CONFIG_PACKAGE_file=n
+
+          # 网络诊断工具（保留 ethtool、netperf；移除 tcpdump、iperf）
+          CONFIG_PACKAGE_tcpdump=n
+          CONFIG_PACKAGE_iperf=n
+
+          # 版本控制与编辑器
+          CONFIG_PACKAGE_git=n
+          CONFIG_PACKAGE_subversion=n
+          CONFIG_PACKAGE_mercurial=n
+          CONFIG_PACKAGE_nano=n
+          CONFIG_PACKAGE_vim=n
+          CONFIG_PACKAGE_emacs=n
+
+          # 内核调试/追踪
+          CONFIG_KERNEL_SLUB_DEBUG=n
+          CONFIG_KERNEL_KMEMLEAK=n
+          CONFIG_KERNEL_FUNCTION_TRACER=n
+          CONFIG_KERNEL_TRACEPOINTS=n
+
+          # HTTP SSL (可移除以节省空间)
+          CONFIG_PACKAGE_wget-ssl=n
+
+          # 编译优化（可选但推荐）
+          CONFIG_KERNEL_STRIP=y
+          CONFIG_USE_STRIP=y
+
           # Build options
           CONFIG_TARGET_IMAGES_GZIP=y
           CONFIG_KERNEL_BUILD_USER="WWDK-CI"
