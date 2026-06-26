@@ -6,24 +6,32 @@
 # 
 # <https://github.com/KFERMercer/OpenWrt-CI>
 #
+
 name: OpenWrt-7628
+
 on:
   watch:
     types: started
   release:
     types: [published]
   workflow_dispatch:
+
 jobs:
+
   build_openwrt:
+
     name: Build OpenWrt firmware
     runs-on: ubuntu-24.04
     if: github.event.repository.owner.id == github.event.sender.id
+
     steps:
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: master
           path: ./openwrt-ci
+
       - name: Space cleanup
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -36,6 +44,7 @@ jobs:
           sudo npm install -g uglify-js || true
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
+
           # sudo mkdir -p -m 777 /mnt/openwrt/bin /mnt/openwrt/build_dir/host /mnt/openwrt/build_dir/hostpkg /mnt/openwrt/dl /mnt/openwrt/feeds /mnt/openwrt/staging_dir
           # ln -s /mnt/openwrt/bin ./bin
           # mkdir -p ./build_dir
@@ -44,12 +53,14 @@ jobs:
           # ln -s /mnt/openwrt/dl ./dl
           # ln -s /mnt/openwrt/feeds ./feeds
           # ln -s /mnt/openwrt/staging_dir ./staging_dir
+
           df -h
+
       - name: Download Source
         uses: actions/checkout@v4
         with:
           repository: openwrt/openwrt
-          ref: v24.10.7
+          ref: v23.05.4
           path: ./openwrt
           
       - name: Update feeds
@@ -60,57 +71,29 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           df -h
+
       - name: Generate configuration file
         run: |
           cd ./openwrt
           rm -f ./.config*
           touch ./.config
+
           git apply ../openwrt-ci/0001-WWDK7628.patch
           #
-          # Configuration for WWDK M7628 (MT7628AN)
-          # OpenWrt v24.10.7 - Embedded Device Control Router
-          # No internet connectivity - Optimized for embedded control use
+          # 在 cat >> .config <<EOF 到 EOF 之间粘贴你的编译配置, 需注意缩进关系
+          # 例如:
+
           cat >> .config <<EOF
-          # Target Configuration
           CONFIG_TARGET_ramips=y
           CONFIG_TARGET_ramips_mt76x8=y
           CONFIG_TARGET_ramips_mt76x8_DEVICE_wwdk_m7628=y
-          # LuCI Web Interface (Chinese)
-          # 不使用 luci/luci-light 元包（它们强制 select firewall/rpcd-mod-rrdns）
-          # 改为手动组装最小 LuCI 组件
-          CONFIG_PACKAGE_luci-base=y
-          CONFIG_PACKAGE_luci-mod-network=y
-          CONFIG_PACKAGE_luci-mod-system=y
-          CONFIG_PACKAGE_luci-mod-status=y
-          CONFIG_PACKAGE_luci-mod-admin-full=n
-          CONFIG_PACKAGE_luci-theme-bootstrap=y
-          CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
+          CONFIG_PACKAGE_luci=y
           CONFIG_LUCI_LANG_zh_Hans=y
-          # Disable IPv6 (not needed for embedded control)
           CONFIG_IPV6=n
           CONFIG_KERNEL_IPV6=n
-          # IPv6 隧道/过渡技术（彻底排除 DHCPv6 相关）
-          CONFIG_PACKAGE_6in4=n
-          CONFIG_PACKAGE_6rd=n
-          CONFIG_PACKAGE_6to4=n
-          CONFIG_PACKAGE_ds-lite=n
-          CONFIG_PACKAGE_map=n
-          # Disable firewall (embedded device, no internet)
-          CONFIG_PACKAGE_firewall4=n
-          CONFIG_PACKAGE_firewall=n
-          CONFIG_PACKAGE_luci-app-firewall=n
-          CONFIG_PACKAGE_luci-i18n-firewall-zh-cn=n
-          CONFIG_PACKAGE_kmod-ipt-core=n
-          CONFIG_PACKAGE_kmod-ipt-conntrack=n
-          CONFIG_PACKAGE_kmod-ipt-nat=n
-          CONFIG_PACKAGE_kmod-nf-ipt=n
-          CONFIG_PACKAGE_libip4tc=n
-          CONFIG_PACKAGE_libip6tc=n
-          CONFIG_PACKAGE_libiptext=n
-          CONFIG_PACKAGE_libiptext6=n
-          CONFIG_PACKAGE_libxtables=n
-          CONFIG_PACKAGE_ufw=n
-          # Disable PPP/WAN (not needed for embedded control)
+          CONFIG_KERNEL_IPV6_MULTIPLE_TABLES=n
+          CONFIG_KERNEL_IPV6_SUBTREES=n
+          CONFIG_KERNEL_IPV6_MROUTE=n
           CONFIG_PACKAGE_ppp=n
           CONFIG_PACKAGE_ppp-mod-pppoe=n
           CONFIG_PACKAGE_odhcp6c=n
@@ -118,89 +101,21 @@ jobs:
           CONFIG_PACKAGE_kmod-ppp=n
           CONFIG_PACKAGE_kmod-pppoe=n
           CONFIG_PACKAGE_kmod-pppox=n
-          CONFIG_PACKAGE_luci-proto-ppp=n
-          CONFIG_PACKAGE_luci-proto-ipv6=n
           CONFIG_PACKAGE_kmod-mppe=n
-          # Disable unnecessary packages for speed
+          CONFIG_PACKAGE_luci-proto-ppp=n
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
           CONFIG_PACKAGE_MAC80211_MESH=n
-          CONFIG_PACKAGE_MAC80211_HWSIM=n
           CONFIG_USB_SUPPORT=n
           CONFIG_KERNEL_DEBUG_FS=n
-          CONFIG_KERNEL_KALLSYMS=n
-          CONFIG_KERNEL_DEBUG_INFO=n
-          # Optimize for boot speed - remove unnecessary daemons
-          CONFIG_PACKAGE_rpcd=y
-          CONFIG_PACKAGE_rpcd-mod-file=y
-          CONFIG_PACKAGE_rpcd-mod-luci=y
-          CONFIG_PACKAGE_rpcd-mod-ucode=y
-          CONFIG_PACKAGE_rpcd-mod-iwinfo=y
-          CONFIG_PACKAGE_rpcd-mod-rrdns=n
-          CONFIG_PACKAGE_uhttpd=y
-          CONFIG_PACKAGE_uhttpd-mod-ubus=y
-          CONFIG_PACKAGE_odhcpd=n
-          CONFIG_PACKAGE_dnsmasq=n
-          # ===== 积极方案 - 额外移除（保留 ethtool 与 netperf） =====
-          # 文件系统工具
-          CONFIG_PACKAGE_e2fsprogs=n
-          CONFIG_PACKAGE_resize2fs=n
-          CONFIG_PACKAGE_fdisk=n
-          CONFIG_PACKAGE_parted=n
-          # 系统调试工具
-          CONFIG_PACKAGE_gdb=n
-          CONFIG_PACKAGE_strace=n
-          # 命令行工具
-          CONFIG_PACKAGE_curl=n
-          CONFIG_PACKAGE_less=n
-          CONFIG_PACKAGE_file=n
-          # 网络诊断工具（保留 ethtool、netperf；移除 tcpdump、iperf）
-          CONFIG_PACKAGE_tcpdump=n
-          CONFIG_PACKAGE_iperf=n
-          # 版本控制与编辑器
-          CONFIG_PACKAGE_git=n
-          CONFIG_PACKAGE_subversion=n
-          CONFIG_PACKAGE_mercurial=n
-          CONFIG_PACKAGE_nano=n
-          CONFIG_PACKAGE_vim=n
-          CONFIG_PACKAGE_emacs=n
-          # 内核调试/追踪
-          CONFIG_KERNEL_SLUB_DEBUG=n
-          CONFIG_KERNEL_KMEMLEAK=n
-          CONFIG_KERNEL_FUNCTION_TRACER=n
-          CONFIG_KERNEL_TRACEPOINTS=n
-          # HTTP SSL (可移除以节省空间)
-          CONFIG_PACKAGE_wget-ssl=n
-          # 移除包管理器（嵌入式控制场景不需要在线装包）
-          CONFIG_PACKAGE_luci-app-package-manager=n
-          CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn=n
-          # ==========================================================
-          # WiFi 驱动与核心组件 (MT7628AN -> MT7603E 2.4GHz)
-          # ==========================================================
-          CONFIG_PACKAGE_kmod-mt7603=y
-          CONFIG_PACKAGE_kmod-mac80211=y
-          CONFIG_PACKAGE_kmod-cfg80211=y
-          CONFIG_PACKAGE_iw=y
-          CONFIG_PACKAGE_iwinfo=y
-          CONFIG_PACKAGE_wireless-tools=y
-          CONFIG_PACKAGE_wireless-regdb=y
-          CONFIG_PACKAGE_kmod-nls-base=y
-          CONFIG_PACKAGE_wpad-basic-mbedtls=y
-          # ==========================================================
-          # 网络性能优化
-          # ==========================================================
-          CONFIG_KERNEL_NETDEVICES=y
-          CONFIG_KERNEL_NET_CORE=y
-          # 编译优化
-          CONFIG_KERNEL_STRIP=y
-          CONFIG_USE_STRIP=y
-          # Build options
           CONFIG_TARGET_IMAGES_GZIP=y
           CONFIG_KERNEL_BUILD_USER="WWDK-CI"
-          CONFIG_KERNEL_BUILD_DOMAIN="embedded.control"
+          CONFIG_KERNEL_BUILD_DOMAIN="Geophyson"
           EOF
+
           #
           # ===============================================================
           # 
+
           sed -i 's/^[ \t]*//g' ./.config
           make defconfig
           # 输出完整 .config（无论后续检查是否通过，都能看到最终配置）
@@ -238,6 +153,7 @@ jobs:
           make download -j8 || make download -j1 V=s
           rm -rf $(find ./dl/ -size -1024c)
           df -h
+
       - name: Compile firmware
         run: |
           cd ./openwrt
@@ -249,6 +165,7 @@ jobs:
           echo "======================="
           du -h ./ --max-depth=1
           du -h /mnt/openwrt/ --max-depth=1 || true
+
       - name: Prepare artifact
         run: |
           mkdir -p ./artifact/firmware
@@ -259,21 +176,25 @@ jobs:
           cp -rf $(find ./openwrt/bin/packages/ -type f -name "*.ipk") ./artifact/package/
           cp -rf $(find ./openwrt/bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
           cp -f ./openwrt/.config ./artifact/buildinfo/
+
       - name: Deliver buildinfo
         uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
+
       - name: Deliver package
         uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_package
           path: ./artifact/package/
+
       - name: Deliver firmware
         uses: actions/upload-artifact@v4
         with:
           name: OpenWrt_firmware
           path: ./openwrt/bin/targets/
+
       - name: Upload release asset
         if: github.event == 'release'
         uses: svenstaro/upload-release-action@v2
