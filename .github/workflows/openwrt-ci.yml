@@ -75,9 +75,15 @@ jobs:
           CONFIG_TARGET_ramips=y
           CONFIG_TARGET_ramips_mt76x8=y
           CONFIG_TARGET_ramips_mt76x8_DEVICE_wwdk_m7628=y
-          # LuCI Web Interface (Chinese)
-          CONFIG_PACKAGE_luci=y
+          # LuCI Web Interface (Chinese) - 使用 luci-light 替代 luci 元包
+          # 避免 luci 元包强制拉入 firewall、package-manager 等
+          CONFIG_PACKAGE_luci-light=y
           CONFIG_PACKAGE_luci-base=y
+          CONFIG_PACKAGE_luci-mod-network=y
+          CONFIG_PACKAGE_luci-mod-system=y
+          CONFIG_PACKAGE_luci-mod-status=y
+          CONFIG_PACKAGE_luci-theme-bootstrap=y
+          CONFIG_PACKAGE_luci-i18n-base-zh-cn=y
           CONFIG_LUCI_LANG_zh_Hans=y
           # Disable IPv6 (not needed for embedded control)
           CONFIG_IPV6=n
