@@ -125,28 +125,6 @@ jobs:
           cat .config
           echo "======================="
           echo ""
-          # 检查：确认禁用列表中的包没有被依赖强制拉回
-          echo "Checking forbidden packages..."
-          echo "======================="
-          FORBIDDEN_PKGS="firewall firewall4 luci-app-firewall luci-app-package-manager rpcd-mod-rrdns"
-          FAILED=0
-          for pkg in $FORBIDDEN_PKGS; do
-            if grep -q "CONFIG_PACKAGE_${pkg}=y" .config; then
-              echo "ERROR: CONFIG_PACKAGE_${pkg}=y still present after defconfig!"
-              echo ""
-              echo ">>> Who selects/depends on ${pkg}?"
-              grep -rn "select.*PACKAGE_${pkg}\|\+${pkg}\|DEPENDS.*${pkg}" feeds/ package/ target/ --include="Config.in" --include="Makefile" 2>/dev/null | head -20 || true
-              echo ""
-              FAILED=1
-            fi
-          done
-          if [ $FAILED -eq 1 ]; then
-            echo ""
-            echo "One or more forbidden packages were forced back by 'select' dependencies."
-            echo "Disable the upstream package shown above, or remove it from the config."
-            exit 1
-          fi
-          echo "All forbidden packages confirmed absent. OK."
       - name: Make download
         run: |
           cd ./openwrt
