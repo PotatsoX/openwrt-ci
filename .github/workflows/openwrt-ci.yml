@@ -202,6 +202,27 @@ jobs:
           # 
           sed -i 's/^[ \t]*//g' ./.config
           make defconfig
+          # 检查：确认禁用列表中的包没有被依赖强制拉回
+          echo "======================="
+          echo "Checking forbidden packages..."
+          echo "======================="
+          FORBIDDEN_PKGS="firewall firewall4 luci-app-firewall luci-app-package-manager rpcd-mod-rrdns"
+          FAILED=0
+          for pkg in $FORBIDDEN_PKGS; do
+            if grep -q "CONFIG_PACKAGE_${pkg}=y" .config; then
+              echo "ERROR: CONFIG_PACKAGE_${pkg}=y still present after defconfig!"
+              echo "Dependency chain (who selects it):"
+              ./scripts/diffconfig.sh | grep -i "${pkg}" || true
+              FAILED=1
+            fi
+          done
+          if [ $FAILED -eq 1 ]; then
+            echo ""
+            echo "One or more forbidden packages were forced back by 'select' dependencies."
+            echo "You must disable the upstream package that selects them."
+            exit 1
+          fi
+          echo "All forbidden packages confirmed absent. OK."
       - name: Make download
         run: |
           cd ./openwrt
