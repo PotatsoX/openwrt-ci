@@ -82,9 +82,26 @@ jobs:
           # Disable IPv6 (not needed for embedded control)
           CONFIG_IPV6=n
           CONFIG_KERNEL_IPV6=n
+          # IPv6 隧道/过渡技术（彻底排除 DHCPv6 相关）
+          CONFIG_PACKAGE_6in4=n
+          CONFIG_PACKAGE_6rd=n
+          CONFIG_PACKAGE_6to4=n
+          CONFIG_PACKAGE_ds-lite=n
+          CONFIG_PACKAGE_map=n
           # Disable firewall (embedded device, no internet)
           CONFIG_PACKAGE_firewall4=n
           CONFIG_PACKAGE_firewall=n
+          CONFIG_PACKAGE_luci-app-firewall=n
+          CONFIG_PACKAGE_luci-i18n-firewall-zh-cn=n
+          CONFIG_PACKAGE_kmod-ipt-core=n
+          CONFIG_PACKAGE_kmod-ipt-conntrack=n
+          CONFIG_PACKAGE_kmod-ipt-nat=n
+          CONFIG_PACKAGE_kmod-nf-ipt=n
+          CONFIG_PACKAGE_libip4tc=n
+          CONFIG_PACKAGE_libip6tc=n
+          CONFIG_PACKAGE_libiptext=n
+          CONFIG_PACKAGE_libiptext6=n
+          CONFIG_PACKAGE_libxtables=n
           CONFIG_PACKAGE_ufw=n
           # Disable PPP/WAN (not needed for embedded control)
           CONFIG_PACKAGE_ppp=n
@@ -95,6 +112,7 @@ jobs:
           CONFIG_PACKAGE_kmod-pppoe=n
           CONFIG_PACKAGE_kmod-pppox=n
           CONFIG_PACKAGE_luci-proto-ppp=n
+          CONFIG_PACKAGE_luci-proto-ipv6=n
           CONFIG_PACKAGE_kmod-mppe=n
           # Disable unnecessary packages for speed
           CONFIG_PACKAGE_MAC80211_DEBUGFS=n
@@ -105,8 +123,14 @@ jobs:
           CONFIG_KERNEL_KALLSYMS=n
           CONFIG_KERNEL_DEBUG_INFO=n
           # Optimize for boot speed - remove unnecessary daemons
-          CONFIG_PACKAGE_rpcd=n
-          CONFIG_PACKAGE_uhttpd=n
+          CONFIG_PACKAGE_rpcd=y
+          CONFIG_PACKAGE_rpcd-mod-file=y
+          CONFIG_PACKAGE_rpcd-mod-luci=y
+          CONFIG_PACKAGE_rpcd-mod-ucode=y
+          CONFIG_PACKAGE_rpcd-mod-iwinfo=y
+          CONFIG_PACKAGE_rpcd-mod-rrdns=n
+          CONFIG_PACKAGE_uhttpd=y
+          CONFIG_PACKAGE_uhttpd-mod-ubus=y
           CONFIG_PACKAGE_odhcpd=n
           CONFIG_PACKAGE_dnsmasq=n
           # ===== 积极方案 - 额外移除（保留 ethtool 与 netperf） =====
@@ -139,9 +163,9 @@ jobs:
           CONFIG_KERNEL_TRACEPOINTS=n
           # HTTP SSL (可移除以节省空间)
           CONFIG_PACKAGE_wget-ssl=n
-          # 编译优化（可选但推荐）
-          CONFIG_KERNEL_STRIP=y
-          CONFIG_USE_STRIP=y
+          # 移除包管理器（嵌入式控制场景不需要在线装包）
+          CONFIG_PACKAGE_luci-app-package-manager=n
+          CONFIG_PACKAGE_luci-i18n-package-manager-zh-cn=n
           # ==========================================================
           # WiFi 驱动与核心组件 (MT7628AN -> MT7603E 2.4GHz)
           # ==========================================================
@@ -159,6 +183,9 @@ jobs:
           # ==========================================================
           CONFIG_KERNEL_NETDEVICES=y
           CONFIG_KERNEL_NET_CORE=y
+          # 编译优化
+          CONFIG_KERNEL_STRIP=y
+          CONFIG_USE_STRIP=y
           # Build options
           CONFIG_TARGET_IMAGES_GZIP=y
           CONFIG_KERNEL_BUILD_USER="WWDK-CI"
