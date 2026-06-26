@@ -218,7 +218,7 @@ index 5b9a04d..fa82474 100644
 +  IMAGE_SIZE := 16064k
 +  DEVICE_VENDOR := WWDK
 +  DEVICE_MODEL := M7628
-+  DEVICE_PACKAGES := uboot-envtools kmod-usb2 kmod-usb-ohci
++  DEVICE_PACKAGES := uboot-envtools
 +endef
 +TARGET_DEVICES += wwdk_m7628
 +
