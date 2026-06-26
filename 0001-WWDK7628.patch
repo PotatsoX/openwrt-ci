@@ -1,111 +1,76 @@
-From b8a3c7d9e2f1a5b6c7d8e9f0a1b2c3d4e5f6a7b8 Mon Sep 17 00:00:00 2001
+From ed92a4df6506dfeffc246be0e46411281d230261 Mon Sep 17 00:00:00 2001
 From: PotatsoX <ichococcino@gmail.com>
-Date: Wed, 25 Jun 2026 04:00:00 +0800
-Subject: [PATCH] Add support for WWDK M7628 embedded control device for OpenWrt v24.10
-Add device tree, configuration files, and network setup for WWDK M7628
-embedded control device with MT7628AN SoC.
-- Add optimized UCI configuration script (firewall disabled, boot optimized)
-- Add device tree source file
-- Register device in image configuration
-- Add network interface mapping
-Optimizations for embedded control use case:
-- Firewall disabled (no internet connectivity)
-- IPv6 disabled
-- Unnecessary services removed for faster boot
-- WiFi channel fixed to 6, country AU, LAN IP 192.168.0.1
+Date: Fri, 16 Aug 2024 11:55:08 +0800
+Subject: [PATCH] 7628nn
+
+WLED_N
 ---
- .../files/etc/uci-defaults/99_custom_wwdk    | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 100 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ .../files/etc/uci-defaults/99_custom          | 46 +++++++++
+ .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 96 +++++++++++++++++++
  target/linux/ramips/image/mt76x8.mk           |  8 ++
  .../mt76x8/base-files/etc/board.d/02_network  |  1 +
- 4 files changed, 181 insertions(+)
- create mode 100755 package/base-files/files/etc/uci-defaults/99_custom_wwdk
+ 4 files changed, 151 insertions(+)
+ create mode 100644 package/base-files/files/etc/uci-defaults/99_custom
  create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 
-diff --git a/package/base-files/files/etc/uci-defaults/99_custom_wwdk b/package/base-files/files/etc/uci-defaults/99_custom_wwdk
-new file mode 100755
-index 0000000..a1b2c3d
+diff --git a/package/base-files/files/etc/uci-defaults/99_custom b/package/base-files/files/etc/uci-defaults/99_custom
+new file mode 100644
+index 0000000..9421afd
 --- /dev/null
-+++ b/package/base-files/files/etc/uci-defaults/99_custom_wwdk
-@@ -0,0 +1,72 @@
-+#!/bin/sh
-+# WWDK M7628 Custom Configuration Script
-+
-+. /lib/functions.sh
-+. /lib/functions/uci-defaults.sh
-+
-+# System Configuration
++++ b/package/base-files/files/etc/uci-defaults/99_custom
+@@ -0,0 +1,46 @@
 +uci batch <<EOF
-+set system.@system[0].hostname='WWDK-TEST'
++set system.@system[0].hostname='WWDK'
 +set system.@system[0].timezone='CST-8'
 +set system.@system[0].zonename='Asia/Shanghai'
-+set system.@system[0].description='WWDK Embedded Control Device'
-+commit system
 +EOF
++uci commit network
 +
-+# Wireless Configuration - 2.4GHz AP (MT7628AN built-in)
 +uci batch <<EOF
 +set wireless.@wifi-device[0].disabled=0
 +set wireless.@wifi-iface[0].disabled=0
-+set wireless.@wifi-device[0].channel=6
-+set wireless.@wifi-device[0].country='AU'
-+set wireless.@wifi-device[0].hwmode=11ng
-+set wireless.@wifi-device[0].htmode='HT40'
-+set wireless.@wifi-device[0].legacy_rates='0'
++set wireless.@wifi-device[0].channel=3    //设置无线信道为3  
 +set wireless.@wifi-iface[0].ssid='WWDK-TEST'
++set wireless.@wifi-iface[0].key='12345678'
 +set wireless.@wifi-iface[0].encryption='none'
-+set wireless.@wifi-iface[0].mode='ap'
-+set wireless.@wifi-iface[0].network='lan'
-+commit wireless
++set wireless.sta.disabled=1
 +EOF
++uci commit
 +
-+# Network Configuration - LAN
-+uci batch <<EOF
-+set network.lan=interface
-+set network.lan.proto='static'
-+set network.lan.ifname='eth0.1'
-+set network.lan.ipaddr='192.168.0.1'
-+set network.lan.netmask='255.255.255.0'
-+set network.lan.ip6assign='60'
-+commit network
-+EOF
-+
-+# Network Configuration - WAN
 +uci batch <<EOF
 +set network.wan=interface
-+set network.wan.ifname='eth0.2'
++set network.wan.ifname='eth0.1'
 +set network.wan.proto='dhcp'
-+commit network
-+EOF
 +
-+# Disable firewall (embedded device, no internet access)
-+uci batch <<EOF
-+set firewall.@defaults[0].syn_flood=0
-+set firewall.@zone[0].enabled=0
-+commit firewall
-+EOF
++set network.lan=interface
++set network.lan.ipaddr='192.168.0.1'
++set network.lan.netmask='255.255.255.0'
 +
-+# Disable unnecessary services for faster boot
-+uci batch <<EOF
-+set uhttpd.main.redirect_https=0
-+commit uhttpd
++set network.lan.ipv6=off
++set network.wan.ipv6=off
++set dhcp.lan.dhcpv6=disabled
++set dhcp.lan.dhcpv6='disabled'
++set dhcp.wan.dhcpv6='disabled'
++set network.lan.ipv6='0'
++set network.wan.ipv6='0'
++set network.lan.delegate='0'
++set network.wan.delegate='0'
++delete dhcp.lan.dhcpv6
++delete dhcp.lan.ra
++delete dhcp.wan.dhcpv6
++delete dhcp.wan.ra
++delete network.globals.ula_prefix
++delete network.wan6
 +EOF
-+
-+# Disable IPv6 in firewall
-+uci batch <<EOF
-+delete firewall.@zone[1]
-+delete firewall.@forwarding[0]
-+commit firewall
-+EOF
-+
 +uci commit
++
 +exit 0
 diff --git a/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 new file mode 100644
 index 0000000..e0e0fb2
 --- /dev/null
 +++ b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
-@@ -0,0 +1,100 @@
+@@ -0,0 +1,96 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +
 +#include "mt7628an.dtsi"
@@ -115,12 +80,12 @@ index 0000000..e0e0fb2
 +
 +/ {
 +	compatible = "wwdk,m7628", "mediatek,mt7628an-soc";
-+	model = "WWDK M7628 Embedded Controller";
++	model = "Geophyson Wireless 7628";
 +
 +	chosen {
 +		bootargs = "console=ttyS0,57600";
 +	};
-+
++	
 +	keys {
 +		compatible = "gpio-keys";
 +
@@ -138,17 +103,12 @@ index 0000000..e0e0fb2
 +			label = "green:wlan";
 +			gpios = <&gpio 44 GPIO_ACTIVE_LOW>;
 +		};
-+
-+		lan {
-+			label = "green:lan";
-+			gpios = <&gpio 37 GPIO_ACTIVE_LOW>;
-+		};
 +	};
 +};
 +
 +&state_default {
 +	gpio {
-+		groups = "i2c", "jtag";
++		groups = "i2c";
 +		function = "gpio";
 +	};
 +};
@@ -192,7 +152,7 @@ index 0000000..e0e0fb2
 +			partition@50000 {
 +				compatible = "denx,uimage";
 +				label = "firmware";
-+				reg = <0x50000 0xfb0000>;
++				reg = <0x50000 0x0fb0000>;
 +			};
 +		};
 +	};
@@ -204,8 +164,10 @@ index 0000000..e0e0fb2
 +
 +&wmac {
 +	status = "okay";
++
 +	mediatek,mtd-eeprom = <&factory 0x0>;
 +};
+\ No newline at end of file
 diff --git a/target/linux/ramips/image/mt76x8.mk b/target/linux/ramips/image/mt76x8.mk
 index 5b9a04d..fa82474 100644
 --- a/target/linux/ramips/image/mt76x8.mk
@@ -225,13 +187,11 @@ index 5b9a04d..fa82474 100644
  define Device/hiwifi_hc5611
    IMAGE_SIZE := 15808k
    DEVICE_VENDOR := HiWiFi
-
 diff --git a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
 index e77bc82..9b3d92f 100644
 --- a/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
 +++ b/target/linux/ramips/mt76x8/base-files/etc/board.d/02_network
-@@ -45,6 +45,7 @@ ramips_setup_interfaces()
- 	asus,rt-ac1200|\
+@@ -39,6 +39,7 @@ ramips_setup_interfaces()
  	asus,rt-ac1200-v2|\
  	hilink,hlk-7628n|\
  	hilink,hlk-7688a|\
@@ -239,5 +199,6 @@ index e77bc82..9b3d92f 100644
  	hiwifi,hc5861b|\
  	kroks,kndrt31r16|\
  	skylab,skw92a|\
---
-2.39.1
+-- 
+2.39.1.windows.1
+
