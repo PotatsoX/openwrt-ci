@@ -14,11 +14,11 @@ Optimizations for embedded control use case:
 - Unnecessary services removed for faster boot
 - WiFi channel fixed to 6, country AU, LAN IP 192.168.0.1
 ---
- .../files/etc/uci-defaults/99_custom_wwdk    | 64 +++++++++++++
- .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 96 +++++++++++++++++++
+ .../files/etc/uci-defaults/99_custom_wwdk    | 72 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ .../linux/ramips/dts/mt7628an_wwdk_m7628.dts  | 100 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  target/linux/ramips/image/mt76x8.mk           |  8 ++
  .../mt76x8/base-files/etc/board.d/02_network  |  1 +
- 4 files changed, 169 insertions(+)
+ 4 files changed, 181 insertions(+)
  create mode 100755 package/base-files/files/etc/uci-defaults/99_custom_wwdk
  create mode 100644 target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
 
@@ -27,7 +27,7 @@ new file mode 100755
 index 0000000..a1b2c3d
 --- /dev/null
 +++ b/package/base-files/files/etc/uci-defaults/99_custom_wwdk
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,72 @@
 +#!/bin/sh
 +# WWDK M7628 Custom Configuration Script
 +
@@ -43,16 +43,19 @@ index 0000000..a1b2c3d
 +commit system
 +EOF
 +
-+# Wireless Configuration
++# Wireless Configuration - 2.4GHz AP (MT7628AN built-in)
 +uci batch <<EOF
 +set wireless.@wifi-device[0].disabled=0
 +set wireless.@wifi-iface[0].disabled=0
 +set wireless.@wifi-device[0].channel=6
 +set wireless.@wifi-device[0].country='AU'
 +set wireless.@wifi-device[0].hwmode=11ng
++set wireless.@wifi-device[0].htmode='HT40'
++set wireless.@wifi-device[0].legacy_rates='0'
 +set wireless.@wifi-iface[0].ssid='WWDK-TEST'
 +set wireless.@wifi-iface[0].encryption='none'
 +set wireless.@wifi-iface[0].mode='ap'
++set wireless.@wifi-iface[0].network='lan'
 +commit wireless
 +EOF
 +
@@ -102,7 +105,7 @@ new file mode 100644
 index 0000000..e0e0fb2
 --- /dev/null
 +++ b/target/linux/ramips/dts/mt7628an_wwdk_m7628.dts
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,100 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 +
 +#include "mt7628an.dtsi"
